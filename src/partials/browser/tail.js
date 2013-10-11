@@ -2,6 +2,11 @@ function Geoservices(options) {
   this.options = options;
 
   this.geocode = geocode;
+  this.enrich = enrich;
+  this.geographyQuery = geographyQuery;
+  this.dataCollections = dataCollections;
+  this.reports = reports;
+  //this.createReport = createReport;
   this.FeatureService = FeatureService;
   this.authenticate = authenticate;
   this.requestHandler = { get: get, post: post };
@@ -18,13 +23,6 @@ function Geoservices(options) {
   };
 
 
-  this.GeoEnrichmentService = function (optionalToken) {
-    optionalToken = optionalToken || self.token;
-
-    var geoEnrichService = new GeoEnrichmentService(optionalToken);
-
-    return geoEnrichService;
-  };
 }
   exports.Geoservices = Geoservices;
 

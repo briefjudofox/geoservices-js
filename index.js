@@ -8,6 +8,12 @@ function Geoservices(options) {
   this.options = options;
 
   this.geocode = geocode.geocode;
+  this.enrich = geoenrichment.enrich;
+  this.geographyQuery = geoenrichment.geographyQuery;
+  this.dataCollections = geoenrichment.dataCollections;
+  this.reports = geoenrichment.reports;
+  //this.createReport = geoenrichment.createReport;
+
   this.FeatureService = featureservice.FeatureService;
   this.authenticate = authentication.authenticate;
   this.requestHandler = request;
@@ -23,13 +29,6 @@ function Geoservices(options) {
     return batch;
   };
 
-  this.GeoEnrichmentService = function (optionalToken) {
-    optionalToken = optionalToken || self.token;
-
-    var geoEnrichService = new geoenrichment.GeoEnrichmentService(optionalToken);
-
-    return geoEnrichService;
-  };
 }
 
 module.exports = exports = Geoservices;

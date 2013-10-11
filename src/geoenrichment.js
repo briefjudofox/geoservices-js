@@ -1,11 +1,5 @@
 
-function GeoEnrichmentService(token, options) {
-  this.token = token;
-  this.options = options;
-  this.requestHandler = { get: get, post: post };
-}
-
-function baseUrl(options) {
+function geoEnrichBaseUrl(options) {
   var url = 'http://geoenrich.arcgis.com/arcgis/rest/services/World/geoenrichmentserver';
   if (options && options.geoEnrichUrl) url = options.geoEnrichUrl;
   return url;
@@ -23,17 +17,15 @@ function _internalCallback(err, data, cb) {
   }
 }
 
-GeoEnrichmentService.prototype.issueRequest = function (endPoint, parameters, cb, method) {
+function issueGeoEnrichmentRequest(endPoint, parameters, cb, method, rh) {
   var current = new Date();
-
-  if (!this.token || !this.token.token ||
-    this.token.expires < current) {
+  if (!parameters.token || !parameters.token.token ||
+    parameters.token.expires < current) {
     _internalCallback("Valid authentication token is required", "Valid authentication token is required", cb);
     return;
   }
-
   parameters.f = parameters.f || 'json';
-  parameters.token = this.token.token;
+  parameters.token = parameters.token.token;
 
   //Object or Array Parameters for GeoEnrichmentServices
   var objParamKeys = ['analysisVariables',
@@ -56,53 +48,63 @@ GeoEnrichmentService.prototype.issueRequest = function (endPoint, parameters, cb
   }
 
   //build the request url
-  var url = baseUrl(this.options);
+  var url = geoEnrichBaseUrl(this.options);
   url += '/' + endPoint;
 
   if (!method || method.toLowerCase() === "get") {
     url += ('?' + stringify(parameters));
-
-    this.requestHandler.get(url, function (err, data) {
+    rh.get(url, function (err, data) {
       _internalCallback(err, data, cb);
     });
   } else {
     //assuming method is POST
-    this.requestHandler.post(url, parameters, function (err, data) {
+    rh.post(url, parameters, function (err, data) {
       _internalCallback(err, data, cb);
     });
   }
-};
+}
 
 // issues an enrich request on the geoenrichment service
-GeoEnrichmentService.prototype.enrich = function (parameters, callback) {
-  this.issueRequest('GeoEnrichment/enrich', parameters, callback, 'post');
-};
+function enrich(parameters, callback) {
+  parameters.token = parameters.token || this.token || this.options.token;
+  issueGeoEnrichmentRequest('GeoEnrichment/enrich', parameters, callback, 'post',this.requestHandler);
+}
 
 // issues a Reports request on the geoenrichment service
-GeoEnrichmentService.prototype.reports = function (parameters, callback) {
+function reports(parameters, callback) {
+  parameters.token = parameters.token || this.token || this.options.token;
   var endpoint = 'GeoEnrichment/Reports';
   if (parameters && parameters.country){
     endpoint += ('/' + parameters.country);
     delete parameters.country;
   }
-  this.issueRequest(endpoint, parameters, callback, 'get');
- };
+  issueGeoEnrichmentRequest(endpoint, parameters, callback, 'get',this.requestHandler);
+ }
 
 // issues a createReport request on the geoenrichment service
 //@TODO: needs a binary response handler
-/*GeoEnrichmentService.prototype.createReport = function (parameters, callback) {
+/*function createReport(parameters, callback) {
+ parameters.token = parameters.token || this.token || this.options.token;
  parameters.f = 'bin';
- this.issueRequest('GeoEnrichment/CreateReport', parameters, callback, 'post');
- };*/
+ issueGeoEnrichmentRequest('GeoEnrichment/CreateReport', parameters, callback, 'post',this.requestHandler);
+ }*/
 
 // issues a dataCollections request on the geoenrichment service
-GeoEnrichmentService.prototype.dataCollections = function (parameters, callback) {
+function dataCollections(parameters, callback) {
+  parameters.token = parameters.token || this.token || this.options.token;
   var endpoint = 'GeoEnrichment/dataCollections';
   if (parameters && parameters.country) endpoint += ('/' + parameters.country);
-  this.issueRequest(endpoint, parameters, callback, 'get');
-};
+  issueGeoEnrichmentRequest(endpoint, parameters, callback, 'get',this.requestHandler);
+}
 
 // issues a geographyQuery request on the geoenrichment service
-GeoEnrichmentService.prototype.geographyQuery = function (parameters, callback) {
-  this.issueRequest('StandardGeographyQuery/execute', parameters, callback, 'get');
-};
+function geographyQuery(parameters, callback) {
+  parameters.token = parameters.token || this.token || this.options.token;
+  issueGeoEnrichmentRequest('StandardGeographyQuery/execute', parameters, callback, 'get',this.requestHandler);
+}
+
+enrich.requestHandler = { get: get, post: post };
+reports.requestHandler = { get: get, post: post };
+//createReport.requestHandler = { get: get, post: post };
+dataCollections.requestHandler = { get: get, post: post };
+geographyQuery.requestHandler = { get: get, post: post };
